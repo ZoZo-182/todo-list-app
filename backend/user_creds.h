@@ -3,7 +3,8 @@
 
 
 #include <stdio.h>
-#define DATABASE "credentials.db"
+#include <sqlite3.h>
+#include <stdbool.h>
 
 // struct for user register data
 typedef struct 
@@ -18,9 +19,9 @@ typedef struct
 int is_valid_password(char *password);
 char* hash_password(char *password);
 
-void db_connection(char *, ...);
+bool insert_user(sqlite3* db, ConnInfo *user_info);
 
-
+int MHD_background(int argc, char *const *argv); 
     
 
 // login function 

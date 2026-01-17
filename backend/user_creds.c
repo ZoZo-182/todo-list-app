@@ -1,7 +1,60 @@
 #include "user_creds.h"
 #include <microhttpd.h>
 #include <string.h>
+#include <sqlite3.h>
+#include <stdlib.h>
+#include <sodium.h>
 
+char* hash_password(char *password) {
+  char *hashed_password = malloc(crypto_pwhash_STRBYTES);
+  if (!hashed_password) {
+      return NULL;
+  }
+
+  if (crypto_pwhash_str(
+              hashed_password,
+              password,
+              strlen(password),
+              crypto_pwhash_OPSLIMIT_SENSITIVE,
+              crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
+      fprintf(stderr,"error hashing password");
+      free(hashed_password);
+      return NULL;
+  }
+
+  return hashed_password;
+}
+
+bool insert_user(sqlite3 *db, ConnInfo *user_info) {
+  char *err_msg = 0;
+  int rc = sqlite3_open("credentials.db", &db);
+  sqlite3_stmt *statement;
+
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+    return false;
+  }
+
+  char *sql_insert_user;
+
+  sprintf(sql_insert_user,
+          "INSERT INTO users (first_name, last_name, email, password)"
+          "VALUES ('%s', '%s', '%s', '%s')",
+          user_info->first_name, user_info->last_name, user_info->email,
+          hash_password(user_info->password));
+
+  int rc2 = sqlite3_prepare_v2(db, sql_insert_user, strlen(sql_insert_user),
+                               &statement, NULL);
+  if (rc2 == SQLITE_OK) {
+    rc2 = sqlite3_step(statement);
+    return true;
+  } else {
+    fprintf(stderr, "Cannot add %s, %s, %s, and %s to db: %s\n",
+            user_info->first_name, user_info->last_name, user_info->email,
+            hash_password(user_info->password), sqlite3_errmsg(db));
+    return false;
+  }
+}
 
 static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind, const char *key,
         const char *filename, const char *content_type,
@@ -9,6 +62,7 @@ static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind, const c
         size_t size)
 {
     ConnInfo *user_info = cls;
+    bool success;
     // put data received in user_info
     if (0 == strcmp("first_name", key))
     {
@@ -27,9 +81,14 @@ static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind, const c
         user_info->password = data;
     }
 
+    sqlite3 *db;
     // db connection 
-        // put each member to its corresponding db col in user table
-    //
+    success = insert_user(db, user_info);
+    if (success != true) {
+        printf("error inserting user.");
+        return MHD_NO;
+    }
+    
     return MHD_YES;
 }
 
@@ -61,15 +120,56 @@ static int register_user(void *cls, struct MHD_Connection *connection,
     }
 }
 
+int MHD_background(int argc, char *const *argv) {
+  struct MHD_Daemon *d;
+  struct timeval tv;
+  struct timeval *tvp;
+  fd_set rs;
+  fd_set ws;
+  fd_set es;
+  MHD_socket max;
+  MHD_UNSIGNED_LONG_LONG mhd_timeout;
+
+  if (argc != 2)
+    {
+      printf ("%s PORT\n", argv[0]);
+      return 1;
+    }
+  /* initialize PRNG */
+  srandom((unsigned int) time (NULL));
+  d = MHD_start_daemon (MHD_USE_DEBUG,
+                        atoi (argv[1]),
+                        NULL, NULL,
+			NULL, NULL,
+			MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 15,
+			MHD_OPTION_NOTIFY_COMPLETED, NULL, NULL,
+			MHD_OPTION_END);
+  if (NULL == d)
+    return 1;
+  while (1)
+    {
+      max = 0;
+      FD_ZERO (&rs);
+      FD_ZERO (&ws);
+      FD_ZERO (&es);
+      if (MHD_YES != MHD_get_fdset (d, &rs, &ws, &es, &max))
+	break; /* fatal internal error */
+      if (MHD_get_timeout (d, &mhd_timeout) == MHD_YES)
+	{
+	  tv.tv_sec = mhd_timeout / 1000;
+	  tv.tv_usec = (mhd_timeout - (tv.tv_sec * 1000)) * 1000;
+	  tvp = &tv;
+	}
+      else
+	tvp = NULL;
+      select (max + 1, &rs, &ws, &es, tvp);
+      MHD_run (d);
+    }
+  MHD_stop_daemon (d);
+}
 // login_user function
 // parse the data into the struct user_info
 // open db connection
 // do checks like if email exists in db
 // if yes then check if password is correct
 // send back responses accordingly
-
-int main(void) {
-   // register_user();
-    return 0;
-}
-
