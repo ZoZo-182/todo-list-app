@@ -8,6 +8,28 @@ static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind, const c
         const char *transfer_encoding, const char *data, uint64_t off,
         size_t size)
 {
+    ConnInfo *user_info = cls;
+    // put data received in user_info
+    if (0 == strcmp("first_name", key))
+    {
+        user_info->first_name = data;
+    }
+    if (0 == strcmp("last_name", key))
+    {
+        user_info->last_name = data;
+    }
+    if (0 == strcmp("email", key))
+    {
+        user_info->email = data;
+    }
+    if (0 == strcmp("password", key))
+    {
+        user_info->password = data;
+    }
+
+    // db connection 
+        // put each member to its corresponding db col in user table
+    //
     return MHD_YES;
 }
 
@@ -38,6 +60,13 @@ static int register_user(void *cls, struct MHD_Connection *connection,
         return MHD_NO;
     }
 }
+
+// login_user function
+// parse the data into the struct user_info
+// open db connection
+// do checks like if email exists in db
+// if yes then check if password is correct
+// send back responses accordingly
 
 int main(void) {
    // register_user();

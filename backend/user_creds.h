@@ -18,6 +18,9 @@ typedef struct
 int is_valid_password(char *password);
 char* hash_password(char *password);
 
+void db_connection(char *, ...);
+
+
     
 
 // login function 
