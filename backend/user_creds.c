@@ -22,36 +22,35 @@ char* hash_password(char *password) {
       return NULL;
   }
 
-  return hashed_password;
+  return hashed_password; // remember to free this after function call
 }
 
 bool insert_user(sqlite3 *db, ConnInfo *user_info) {
   char *err_msg = 0;
-  int rc = sqlite3_open("credentials.db", &db);
   sqlite3_stmt *statement;
 
-  if (rc != SQLITE_OK) {
-    fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
-    return false;
-  }
+  // parameter binding instead of using sprintf (unsafe!)
+  const char *sql = "INSERT INTO users (first_name, last_name, email,"
+        "password) VALUES (?, ?, ?, ?)";
 
-  char *sql_insert_user;
-
-  sprintf(sql_insert_user,
-          "INSERT INTO users (first_name, last_name, email, password)"
-          "VALUES ('%s', '%s', '%s', '%s')",
-          user_info->first_name, user_info->last_name, user_info->email,
-          hash_password(user_info->password));
-
-  int rc2 = sqlite3_prepare_v2(db, sql_insert_user, strlen(sql_insert_user),
+  int rc = sqlite3_prepare_v2(db, sql, strlen(sql),
                                &statement, NULL);
-  if (rc2 == SQLITE_OK) {
-    rc2 = sqlite3_step(statement);
+  if (rc == SQLITE_OK) {
+    sqlite3_bind_text(statement, 1, user_info->first_name, -1,
+            SQLITE_TRANSIENT);
+    sqlite3_bind_text(statement, 2, user_info->last_name, -1,
+            SQLITE_TRANSIENT);
+    sqlite3_bind_text(statement, 3, user_info->first_name, -1,
+            SQLITE_TRANSIENT);
+    sqlite3_bind_text(statement, 4, user_info->first_name, -1,
+            SQLITE_TRANSIENT);
+    rc = sqlite3_step(statement);
     return true;
   } else {
     fprintf(stderr, "Cannot add %s, %s, %s, and %s to db: %s\n",
             user_info->first_name, user_info->last_name, user_info->email,
             hash_password(user_info->password), sqlite3_errmsg(db));
+    printf("couldnt add user.");
     return false;
   }
 }
