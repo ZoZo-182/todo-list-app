@@ -16,7 +16,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: apt-get install libsodium-dev build-essential libmicrohttpd-dev sqlite3
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsodium-dev build-essential libmicrohttpd-dev sqlite3
 
       - name: Compile Tests
         run: |
