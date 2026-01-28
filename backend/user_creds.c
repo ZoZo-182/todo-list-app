@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 char *hash_password(char *password) {
   char *hashed_password = malloc(crypto_pwhash_STRBYTES);
