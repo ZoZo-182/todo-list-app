@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [ addCI ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: apt-get install libsodium-dev build-essential libmicrohttpd-dev sqlite3
+
+      - name: Compile Tests
+        run: clang | 
+        -o backend/src/tests/test_runner \
+        backend/src/tests/tests.c \
+        backend/user_creds.c \ 
+        backend/munit/munit.h \
+        backend/src/munit.c \
+        -llibmicrohttpd \
+        -lsodium \
+        -lsqlite3
+
+      - name: Run Tests
+        run: ./backend/src/tests/test_runner
+
