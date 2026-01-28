@@ -26,8 +26,8 @@ jobs:
           clang -o test_runner \
           tests.c \
           ../../user_creds.c \
-          ../../munit/munit.h \
           ../munit.c \
+          -I ../../munit \
           -lmicrohttpd \
           -lsodium \
           -lsqlite3
