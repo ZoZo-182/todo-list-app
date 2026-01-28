@@ -19,8 +19,8 @@ jobs:
         run: apt-get install libsodium-dev build-essential libmicrohttpd-dev sqlite3
 
       - name: Compile Tests
-        run: clang | 
-        -o backend/src/tests/test_runner \
+        run: |
+        clang -o backend/src/tests/test_runner \
         backend/src/tests/tests.c \
         backend/user_creds.c \ 
         backend/munit/munit.h \
