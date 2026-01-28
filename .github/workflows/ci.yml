@@ -20,14 +20,14 @@ jobs:
 
       - name: Compile Tests
         run: |
-        clang -o backend/src/tests/test_runner \
-        backend/src/tests/tests.c \
-        backend/user_creds.c \ 
-        backend/munit/munit.h \
-        backend/src/munit.c \
-        -llibmicrohttpd \
-        -lsodium \
-        -lsqlite3
+          clang -o backend/src/tests/test_runner \
+          backend/src/tests/tests.c \
+          backend/user_creds.c \ 
+          backend/munit/munit.h \
+          backend/src/munit.c \
+          -llibmicrohttpd \
+          -lsodium \
+          -lsqlite3
 
       - name: Run Tests
         run: ./backend/src/tests/test_runner
