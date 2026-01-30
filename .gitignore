@@ -1,6 +1,5 @@
 user_creds
 *.db
-build/
 .Rdata
 .Rhistory
 AGENTS.md

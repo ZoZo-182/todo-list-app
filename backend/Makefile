@@ -6,7 +6,7 @@ CFLAGS = -g -Wall
 all: app test
 
 app:
-	$(CC) $(CFLAGS) -o todo_app src/main.c src/user_creds.c -lmicrohttpd -lsodium -lsqlite3
+	$(CC) $(CFLAGS) -o ./build/todo_app src/main.c src/user_creds.c -lmicrohttpd -lsodium -lsqlite3
 
 runa:
 	./build/todo_app
