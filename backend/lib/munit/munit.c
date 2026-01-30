@@ -115,7 +115,7 @@
 #  endif
 #endif
 
-#include "../munit/munit.h"
+#include "munit.h"
 
 #define MUNIT_STRINGIFY(x) #x
 #define MUNIT_XSTRINGIFY(x) MUNIT_STRINGIFY(x)

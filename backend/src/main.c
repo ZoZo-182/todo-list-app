@@ -1,4 +1,4 @@
-#include "user_creds.h"
+#include "../include/user_creds.h"
 #include <sodium.h>
 #include <sqlite3.h>
 #include <stdio.h>

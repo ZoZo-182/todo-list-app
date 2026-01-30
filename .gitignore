@@ -1,9 +1,12 @@
 user_creds
 *.db
-test/
+build/
 .Rdata
 .Rhistory
 AGENTS.md
 compile_errors.txt
 stderr.log
 test_errors.txt
+*.dSYM/
+*.dSYM
+.DS_Store

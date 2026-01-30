@@ -1,5 +1,5 @@
-#include "../../munit/munit.h"
-#include "../../user_creds.h"
+#include "../lib/munit/munit.h"
+#include "../include/user_creds.h"
 #include <sodium.h>
 
 ConnInfo user = {NULL, "Bob", "Smith", "chickenbirriataco@gmail.com", "yummy"};
