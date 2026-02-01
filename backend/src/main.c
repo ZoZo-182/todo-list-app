@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char const **argv) {
+int main(int argc, char *const *argv) {
   if (sodium_init() < 0) {
     printf("library was not initialized properly. its not safe to use.");
     return 1;
