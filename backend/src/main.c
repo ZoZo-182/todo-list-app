@@ -4,13 +4,15 @@
 #include <stdio.h>
 #include <string.h>
 
+
+sqlite3 *db = NULL;
+
 int main(int argc, char *const *argv) {
   if (sodium_init() < 0) {
     printf("library was not initialized properly. its not safe to use.");
     return 1;
   }
 
-  sqlite3 *db;
   char *err_msg = 0;
   int rc = sqlite3_open("credentials.db", &db);
 
@@ -18,6 +20,9 @@ int main(int argc, char *const *argv) {
     fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
     return 1;
   }
+
+  sqlite3_exec(db, "PRAGMA journal_mode=WAL;", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA synchronous=NORMAL;", NULL, NULL, NULL);
 
   char *sql = "CREATE TABLE IF NOT EXISTS users ("
               "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -35,10 +40,11 @@ int main(int argc, char *const *argv) {
     printf("Table created successfully.\n");
   }
 
-  sqlite3_close(db);
 
   // run MHD_daemon function
   MHD_background(argc, argv);
+
+  sqlite3_close(db);
 
   return 0;
 }

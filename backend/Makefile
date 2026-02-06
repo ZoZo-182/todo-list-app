@@ -12,10 +12,10 @@ runa:
 	./build/todo_app 8080
 
 test:
-	$(CC) $(CFLAGS) -o ./build/test_runner ./tests/tests.c ./src/user_creds.c ./lib/munit/munit.c -Iinclude -Ilib/munit -lmicrohttpd -lsodium -lsqlite3
+	$(CC) $(CFLAGS) -DTEST_BUILD -o ./build/test_runner ./tests/tests.c ./src/user_creds.c ./lib/munit/munit.c -Iinclude -Ilib/munit -lmicrohttpd -lsodium -lsqlite3
 
 runt:
-	./build/test_runner 8080
+	./build/test_runner
 
 clean:
 	rm -f ./build/todo_app ./build/test_runner

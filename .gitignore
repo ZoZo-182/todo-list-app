@@ -1,5 +1,5 @@
 user_creds
-*.db
+*.db*
 .Rdata
 .Rhistory
 AGENTS.md
@@ -9,3 +9,4 @@ test_errors.txt
 *.dSYM/
 *.dSYM
 .DS_Store
+backend/build/*

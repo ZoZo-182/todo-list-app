@@ -4,6 +4,10 @@
 
 ConnInfo user = {NULL, "Bob", "Smith", "chickenbirriataco@gmail.com", "yummy"};
 
+// dummy def for linking
+// i didnt like this - simple but macro is cleaner
+//sqlite3 *db = NULL;
+
 MunitResult test_pwhash(const MunitParameter params[], void* user_data_or_fixture) {
     char *result = hash_password(user.password);
     printf("hash_password: %s\n", result);
@@ -19,7 +23,7 @@ MunitResult test_insert_user(const MunitParameter params[], void* user_data_or_f
     munit_assert_not_null(db);
 
     bool result = insert_user(db, &user);
-    printf("user inserted: %b\n", result);
+    printf("user inserted: %d\n", result);
     munit_assert_true(result);
     return MUNIT_OK;
 }

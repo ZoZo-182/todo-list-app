@@ -6,6 +6,12 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef TEST_BUILD
+sqlite3 *db = NULL;
+#else
+extern sqlite3 *db;
+#endif
+
 char *hash_password(char *password) {
   char *hashed_password = malloc(crypto_pwhash_STRBYTES);
   if (!hashed_password) {
@@ -13,8 +19,8 @@ char *hash_password(char *password) {
   }
 
   if (crypto_pwhash_str(hashed_password, password, strlen(password),
-                        crypto_pwhash_OPSLIMIT_SENSITIVE,
-                        crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
+                        crypto_pwhash_OPSLIMIT_INTERACTIVE,
+                        crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
     fprintf(stderr, "error hashing password");
     free(hashed_password);
     return NULL;
@@ -24,7 +30,7 @@ char *hash_password(char *password) {
 }
 
 bool insert_user(sqlite3 *db, ConnInfo *user_info) {
-  char *err_msg = 0;
+//  char *err_msg = 0;
   sqlite3_stmt *statement;
   char *hashed_password = hash_password(user_info->password);
 
@@ -130,7 +136,6 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
       user_info = *con_cls;
   }
 
-  sqlite3 *db;
 
   if (strcmp(url, "/register") == 0 && strcmp(method, "POST") == 0) {
     if (user_info->pp == NULL) {
@@ -165,24 +170,24 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
         return ret;
       }
 
-      int rc = sqlite3_open("credentials.db", &db);
-      if (rc != SQLITE_OK) {
-        fprintf(stderr, "error opening database: %s (register_user)\n",
-                sqlite3_errmsg(db));
-        const char *msg = "error opening database.";
-        response = MHD_create_response_from_buffer(strlen(msg), (void *) msg, MHD_RESPMEM_PERSISTENT);
-        MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-        ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
+     // int rc = sqlite3_open("credentials.db", &db);
+     // if (rc != SQLITE_OK) {
+     //   fprintf(stderr, "error opening database: %s (register_user)\n",
+     //           sqlite3_errmsg(db));
+     //   const char *msg = "error opening database.";
+     //   response = MHD_create_response_from_buffer(strlen(msg), (void *) msg, MHD_RESPMEM_PERSISTENT);
+     //   MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+     //   ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
 
-        MHD_destroy_response(response);
-        MHD_destroy_post_processor(user_info->pp);
-        free(user_info->first_name);
-        free(user_info->last_name);
-        free(user_info->email);
-        free(user_info->password);
-        free(user_info);
-        return ret;
-      }
+     //   MHD_destroy_response(response);
+     //   MHD_destroy_post_processor(user_info->pp);
+     //   free(user_info->first_name);
+     //   free(user_info->last_name);
+     //   free(user_info->email);
+     //   free(user_info->password);
+     //   free(user_info);
+     //   return ret;
+     // }
       bool inserted_user = insert_user(db, user_info);
       if (!inserted_user) {
           const char *msg = "Failed to register user.";
@@ -193,7 +198,7 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
           ret = MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
           MHD_destroy_response(response);
 
-          sqlite3_close(db);
+     //     sqlite3_close(db);
 
           MHD_destroy_post_processor(user_info->pp);
           free(user_info->first_name);
@@ -203,7 +208,7 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
           free(user_info);
           return ret;
       }
-      sqlite3_close(db);
+      // sqlite3_close(db);
 
       const char *msg = "User Registered.";
       response = MHD_create_response_from_buffer(strlen(msg), (void *) msg, MHD_RESPMEM_PERSISTENT);
