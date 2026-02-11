@@ -65,6 +65,44 @@ bool insert_user(sqlite3 *db, ConnInfo *user_info) {
   }
 }
 
+char* check_user(sqlite3 *db, ConnInfo *user_info) {
+  sqlite3_stmt *statement;
+
+  // parameter binding instead of using sprintf (unsafe!)
+  const char *sql = "SELECT email, password FROM users WHERE email= ?";
+
+  int rc = sqlite3_prepare_v2(db, sql, strlen(sql), &statement, NULL);
+  if (rc == SQLITE_OK) {
+      // compare client user to user creds in database
+    sqlite3_bind_text(statement, 1, user_info->email, -1, SQLITE_TRANSIENT);
+    rc = sqlite3_step(statement);
+    if (rc != SQLITE_ROW) {
+      fprintf(stderr, "error executing sql statement: %s (check_user)\n",
+              sqlite3_errmsg(db));
+      sqlite3_finalize(statement);
+      return "incorrect email";
+    }
+    // check if no rows returned. 
+   // if (!sqlite3_data_count(statement)) {
+   //     sqlite3_finalize(statement);
+   //     return "incorrect email";
+   // }
+
+
+    int correct_password = crypto_pwhash_str_verify(sqlite3_column_text(statement, 1), user_info->password,
+            strlen(user_info->password));
+    if (correct_password) {
+        sqlite3_finalize(statement);
+        return "incorrect password";
+    }
+
+    sqlite3_finalize(statement);
+    return "successful login";
+  } else {
+    return "server error (sqlite3_prepare_v2)";
+  }
+}
+
 static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind,
                                      const char *key, const char *filename,
                                      const char *content_type,
@@ -150,7 +188,6 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
     } else {
       if (!user_info->first_name || !user_info->last_name ||
           !user_info->email || !user_info->password) {
-        printf("one or more of the user_info fields are empty");
         // send response
         const char *msg = "one or more of the user_info fields are empty";
         response = MHD_create_response_from_buffer(strlen(msg), (void *) msg, MHD_RESPMEM_PERSISTENT);
@@ -230,6 +267,46 @@ static enum MHD_Result register_user(void *cls, struct MHD_Connection *connectio
       // return MHD_queue_response(connection, code, response);
       return ret;
     }
+  } else if (strcmp(method, "POST") == 0 && strcmp(url, "/login")) {
+      char *checked_user = check_user(db, user_info);
+      if (!checked_user) {
+          const char *msg = "login failed.";
+          response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+          MHD_add_response_header(response, "Access-Control-Allow-Origin","*");
+          MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+          MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+          ret = MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
+          MHD_destroy_response(response);
+
+     //     sqlite3_close(db);
+
+          MHD_destroy_post_processor(user_info->pp);
+          free(user_info->first_name);
+          free(user_info->last_name);
+          free(user_info->email);
+          free(user_info->password);
+          free(user_info);
+          return ret;
+      }
+      // sqlite3_close(db);
+
+      const char *msg = "User Registered.";
+      response = MHD_create_response_from_buffer(strlen(msg), (void *) msg, MHD_RESPMEM_PERSISTENT);
+      
+      MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+      MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+      MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+
+      ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+      MHD_destroy_response(response);
+
+      MHD_destroy_post_processor(user_info->pp);
+      free(user_info->first_name);
+      free(user_info->last_name);
+      free(user_info->email);
+      free(user_info->password);
+      free(user_info);
+          // do stuff
   } else {
       const char *not_found = "Not Found";
       response = MHD_create_response_from_buffer(strlen(not_found), (void*) not_found, MHD_RESPMEM_PERSISTENT);
@@ -286,3 +363,5 @@ int MHD_background(int argc, char *const *argv) {
   MHD_stop_daemon(d);
   return 0;
 }
+
+// add password + email constraints

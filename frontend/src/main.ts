@@ -19,7 +19,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       Click on the Vite and TypeScript logos to learn more
     </p>
   </div> -->
-
+  <div class="cred-form">
     <form action="http://localhost:8080/register" method="post">
       <label for="fname">First name:</label>
       <input type="text" id="fname" name="first_name"><br><br>
@@ -31,6 +31,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <input type="text" id="pwd" name="password"><br><br>
       <button type="submit">Sumbit</button> 
     </form> 
+  </div>
 `
 
 // setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)

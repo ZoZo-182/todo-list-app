@@ -21,10 +21,18 @@ MunitResult test_pwhash(const MunitParameter params[], void* user_data_or_fixtur
 MunitResult test_insert_user(const MunitParameter params[], void* user_data_or_fixture) {
     sqlite3 *db = (sqlite3 *)user_data_or_fixture;
     munit_assert_not_null(db);
-
+    
     bool result = insert_user(db, &user);
-    printf("user inserted: %d\n", result);
     munit_assert_true(result);
+    return MUNIT_OK;
+}
+
+MunitResult test_check_user(const MunitParameter params[], void* user_data_or_fixture) {
+    sqlite3 *db = (sqlite3 *)user_data_or_fixture;
+    munit_assert_not_null(db);
+    insert_user(db, &user);
+    char *correct_login = check_user(db, &user); 
+    munit_assert_string_equal(correct_login, "successful login");
     return MUNIT_OK;
 }
 
@@ -76,6 +84,14 @@ static MunitTest tests[] = {
     {
     "/insert-user-test",
     test_insert_user,
+    test_setup,
+    test_tear_down,
+    MUNIT_TEST_OPTION_NONE,
+    NULL
+    },
+    {
+    "/check-user-test",
+    test_check_user,
     test_setup,
     test_tear_down,
     MUNIT_TEST_OPTION_NONE,

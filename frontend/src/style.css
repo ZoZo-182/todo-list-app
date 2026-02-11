@@ -3,9 +3,10 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background: url('https://www.transparenttextures.com/patterns/brick-wall-dark.png');
+ /* color-scheme: light dark; */
+  color: #f8f8f8;
+  background-color: #1a1a2e;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,10 +25,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
+   display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh; 
 }
 
 h1 {
@@ -95,11 +96,11 @@ button:focus-visible {
   }
 }
 
-form {
+.cred-form {
     background: rgba(0, 0, 0, 0.8);
     padding: 20px;
     border-radius: 10px;
     width: 300px;
     margin: auto;
-    box-shadow: 0 0 15px #00ffff;
+    /* box-shadow: 0 0 15px #00ffff; too distracting */
 }

@@ -21,6 +21,8 @@ char* hash_password(char *password);
 
 bool insert_user(sqlite3* db, ConnInfo *user_info);
 
+char* check_user(sqlite3 *db, ConnInfo *user_info);
+
 int MHD_background(int argc, char *const *argv); 
     
 
