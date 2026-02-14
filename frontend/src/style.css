@@ -6,7 +6,7 @@
 
   /* text box, but why i already have form stuff..."*/
   color-scheme: light dark; 
-  color: #f8f8f8; /* light gray */
+  color: #f8f8f8; 
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -45,26 +45,6 @@ h1 {
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #3178c6aa);
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
 
 button {
   border-radius: 8px;
@@ -85,6 +65,11 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.hidden {
+    display:none;
+}
+
+/* play with this later */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

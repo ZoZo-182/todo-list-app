@@ -7,7 +7,28 @@
     <title>frontend</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <form id='registerForm' class='cred-form' action="http://localhost:8080/register" method="post">
+      <label for="fname">First name:</label>
+      <input type="text" id="fname" name="first_name"><br><br>
+      <label for="lname">Last name:</label>
+      <input type="text" id="lname" name="last_name"><br><br>
+      <label for="email">Email:</label>
+      <input type="text" id="email" name="email"><br><br>
+      <label for="pwd">Password:</label>
+      <input type="text" id="pwd" name="password"><br><br>
+      <button type="submit">Register</button> 
+      <button type="button" id='btn-login'>Already Have Account</button>
+    </form> 
+    <form id='loginForm' class='cred-form hidden' action="http://localhost:8080/register" method="post">
+      <label for="email">Email:</label>
+      <input type="text" id="email" name="email"><br><br>
+      <label for="pwd">Password:</label>
+      <input type="text" id="pwd" name="password"><br><br>
+      <button type="submit">Login</button> 
+      <button type="button" id='btn-register'>No Account</button>
+    </form> 
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
