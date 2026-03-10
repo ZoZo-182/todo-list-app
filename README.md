@@ -16,6 +16,7 @@ At the end of the day it's just another todo list app.
 - [ ] Separate user creds from todo list content (not really together anyways, I just had a spot for it In the user cred db). Will be using Redis for todo list content
 - [ ] Hey, dont forget about oauth...
     - [ ] get a client for github and google going.
+        - [ ] jwt no opaque
     - [ ] make your own server 
 - [ ] okay actually implement Redis
 - [ ] For some reason I have been urging myself to wait until I am 'done' to refactor but I can't take it anymore. do this asap.
