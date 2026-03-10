@@ -30,4 +30,4 @@ At the end of the day it's just another todo list app.
 - [ ] blacksmith instead of ubuntu-latest?
 
 ## License
-MIT. See `LICENSE.txt` for more information.
+MIT. See `LICENSE` for more information.
