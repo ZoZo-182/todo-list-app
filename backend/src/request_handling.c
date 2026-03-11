@@ -57,7 +57,7 @@ static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind,
 }
 
 static enum MHD_Result
-register_user(void *cls, struct MHD_Connection *connection, const char *url,
+handle_request(void *cls, struct MHD_Connection *connection, const char *url,
               const char *method, const char *version, const char *upload_data,
               size_t *upload_data_size, void **con_cls) {
   struct MHD_Response *response;
@@ -249,7 +249,7 @@ int MHD_background(int argc, char *const *argv) {
   }
   /* initialize PRNG */
   srandom((unsigned int)time(NULL));
-  d = MHD_start_daemon(MHD_USE_DEBUG, atoi(argv[1]), NULL, NULL, &register_user,
+  d = MHD_start_daemon(MHD_USE_DEBUG, atoi(argv[1]), NULL, NULL, &handle_request,
                        NULL, MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)15,
                        MHD_OPTION_NOTIFY_COMPLETED, NULL, NULL, MHD_OPTION_END);
   if (NULL == d)
