@@ -30,6 +30,7 @@ At the end of the day it's just another todo list app.
 - [ ] blacksmith instead of ubuntu-latest?
 - [ ] I want something to do with openclaw... 
     - [ ] time to dig
+- [ ] you still need to add email checks and password constraints for users.
 
 ## License
 MIT. See `LICENSE` for more information.

@@ -82,15 +82,13 @@ char *check_user(sqlite3 *db, ConnInfo *user_info) {
       sqlite3_finalize(statement);
       return "incorrect email";
     }
-    // check if no rows returned.
-    // if (!sqlite3_data_count(statement)) {
-    //     sqlite3_finalize(statement);
-    //     return "incorrect email";
-    // }
 
     int correct_password = crypto_pwhash_str_verify(
         sqlite3_column_text(statement, 1), user_info->password,
         strlen(user_info->password));
+    /* more than once you have looked at this statement, forgot what it
+     * does, and freaked out about it not being !correct_password.
+     * look at the damn return type of correct_password */
     if (correct_password) {
       sqlite3_finalize(statement);
       return "incorrect password";
@@ -211,25 +209,6 @@ register_user(void *cls, struct MHD_Connection *connection, const char *url,
         return ret;
       }
 
-      // int rc = sqlite3_open("credentials.db", &db);
-      // if (rc != SQLITE_OK) {
-      //   fprintf(stderr, "error opening database: %s (register_user)\n",
-      //           sqlite3_errmsg(db));
-      //   const char *msg = "error opening database.";
-      //   response = MHD_create_response_from_buffer(strlen(msg), (void *) msg,
-      //   MHD_RESPMEM_PERSISTENT); MHD_add_response_header(response,
-      //   "Access-Control-Allow-Origin", "*"); ret =
-      //   MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
-
-      //   MHD_destroy_response(response);
-      //   MHD_destroy_post_processor(user_info->pp);
-      //   free(user_info->first_name);
-      //   free(user_info->last_name);
-      //   free(user_info->email);
-      //   free(user_info->password);
-      //   free(user_info);
-      //   return ret;
-      // }
       bool inserted_user = insert_user(db, user_info);
       if (!inserted_user) {
         const char *msg = "Failed to register user.";
