@@ -1,8 +1,7 @@
-#include "../include/user_creds.h"
+#include "../include/request_handling.h"
 #include <sodium.h>
 #include <sqlite3.h>
 #include <stdio.h>
-#include <string.h>
 
 
 sqlite3 *db = NULL;
