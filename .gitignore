@@ -7,5 +7,5 @@ test_errors.txt
 *.dSYM/
 *.dSYM
 .DS_Store
-backend/build/*
+backend/build
 .env
