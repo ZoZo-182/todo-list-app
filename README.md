@@ -2,7 +2,7 @@
 ## About The Project
 YATLA (Yet Another Todo List App) (yes, name inspo is from YAFFS) frankenstien project full of various services I wanted to integrate just to say I did it.
 
-At the end of the day it's just another todo list app. \ 
+At the end of the day it's just another todo list app. \
 *okay mayyybe it's one that can be put on a junior dev resume, still won't be on mine tho* \
 *... actually something like this would be nice for a resume if I had legit reasons for using the services in here. It's all just vibes (feel good vibes not vibe coding vibes).* \
 *omg okay I just wanted an excuse to learn more web dev stuff as an embedded software engineer, sue me*
