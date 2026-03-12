@@ -24,7 +24,7 @@ char *hash_password(char *password) {
   return hashed_password; // remember to free this after function call
 }
 
-bool insert_user(sqlite3 *db, ConnInfo *user_info) {
+user_error_t insert_user(sqlite3 *db, ConnInfo *user_info) {
   //  char *err_msg = 0;
   sqlite3_stmt *statement;
   char *hashed_password = hash_password(user_info->password);
@@ -45,22 +45,18 @@ bool insert_user(sqlite3 *db, ConnInfo *user_info) {
       fprintf(stderr, "error executing sql statement: %s (insert_user)\n",
               sqlite3_errmsg(db));
       sqlite3_finalize(statement);
-      return false;
+      return ERROR_UNKNOWN;
     }
     sqlite3_finalize(statement);
     free(hashed_password);
-    return true;
+    return SUCCESS;
   } else {
-    fprintf(stderr, "Cannot add %s, %s, %s, and %s to db: %s\n",
-            user_info->first_name, user_info->last_name, user_info->email,
-            hashed_password, sqlite3_errmsg(db));
-    printf("couldnt add user.");
     free(hashed_password);
-    return false;
+    return ERROR_UNKNOWN;
   }
 }
 
-char *check_user(sqlite3 *db, ConnInfo *user_info) {
+user_error_t check_user(sqlite3 *db, ConnInfo *user_info) {
   sqlite3_stmt *statement;
 
   // parameter binding instead of using sprintf (unsafe!)
@@ -75,7 +71,7 @@ char *check_user(sqlite3 *db, ConnInfo *user_info) {
       fprintf(stderr, "error executing sql statement: %s (check_user)\n",
               sqlite3_errmsg(db));
       sqlite3_finalize(statement);
-      return "incorrect email";
+      return ERROR_INVALID_EMAIL;
     }
 
     int correct_password = crypto_pwhash_str_verify(
@@ -83,16 +79,16 @@ char *check_user(sqlite3 *db, ConnInfo *user_info) {
         strlen(user_info->password));
     /* more than once you have looked at this statement, forgot what it
      * does, and freaked out about it not being !correct_password.
-     * look at the damn return type of correct_password */
+     * look at the damn return type of correct_password -1 vs 0*/
     if (correct_password) {
       sqlite3_finalize(statement);
-      return "incorrect password";
+      return ERROR_INVALID_PASSWORD;
     }
 
     sqlite3_finalize(statement);
-    return "successful login";
+    return SUCCESS;
   } else {
-    return "server error (sqlite3_prepare_v2)";
+    return ERROR_UNKNOWN;
   }
 }
 

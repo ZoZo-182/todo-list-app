@@ -24,10 +24,9 @@ typedef enum
     SUCCESS,
     ERROR_REGISTER_USER,
     ERROR_LOGIN_USER,
+    NOT_FOUND,
 } user_error_t;
 
-
-const char *user_error_str(user_error_t code);
 int MHD_background(int argc, char *const *argv); 
 
 #endif

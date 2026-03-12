@@ -1,7 +1,6 @@
 #include "../include/request_handling.h"
 #include "../include/user_db.h"
 #include <stdio.h>
-//#include <microhttpd.h>
 #include <sqlite3.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,49 +13,125 @@ extern sqlite3 *db;
 #endif
 
 
-/*
- * forward dec
- */
+// forward dec
+static enum MHD_Result handle_options(struct MHD_Connection *connection, struct MHD_Response *response);
+static enum MHD_Result handle_success(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code);
+static enum MHD_Result handle_not_found(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code);
+static enum MHD_Result handle_bad_request(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code);
+static enum MHD_Result handle_internal_server_error(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code);
+static const char *user_error_str(user_error_t code);
 
-static enum MHD_Result handle_options(struct MHD_Connection *connection, 
-        struct MHD_Response *response);
+// mini handlers 
+static enum MHD_Result handle_options(struct MHD_Connection *connection, struct MHD_Response *response) {
+  enum MHD_Result ret;
 
-static enum MHD_Result handle_register(struct MHD_Connection *connection, 
-        struct MHD_Response *response);
+  response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
+  MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+  MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+  ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+  MHD_destroy_response(response);
+  return ret;
+}
 
-static enum MHD_Result handle_login(struct MHD_Connection *connection, 
-        struct MHD_Response *response);
-
-static enum MHD_Result handle_not_found(struct MHD_Connection *connection, 
-        struct MHD_Response *response);
-
-
-/*
- * mini handlers 
- */
-
-static enum MHD_Result handle_options(struct MHD_Connection *connection, 
-        struct MHD_Response *response) {
-
+static enum MHD_Result handle_success(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code) {
     enum MHD_Result ret;
-    response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
+    const char *msg = user_error_str(code);
 
+    response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
+        MHD_RESPMEM_PERSISTENT);
     MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
     MHD_add_response_header(response, "Access-Control-Allow-Methods",
-            "POST, GET, OPTIONS");
+        "POST, GET, OPTIONS");
     MHD_add_response_header(response, "Access-Control-Allow-Headers",
-            "Content-Type");
+        "Content-Type");
     ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+
     MHD_destroy_response(response);
     return ret;
 }
 
+static enum MHD_Result handle_bad_request(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code) {
+  enum MHD_Result ret;
+  const char *msg = user_error_str(code);
+
+  response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
+      MHD_RESPMEM_PERSISTENT);
+  MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+  MHD_add_response_header(response, "Access-Control-Allow-Methods",
+      "POST, GET, OPTIONS");
+  MHD_add_response_header(response, "Access-Control-Allow-Headers",
+      "Content-Type");
+  ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
+  MHD_destroy_response(response);
+  return ret;
+}
+
+// why do i need enum before every MHD-Result?
+static enum MHD_Result handle_internal_server_error(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code) {
+  enum MHD_Result ret;
+  const char *msg = user_error_str(code);
+
+  response = MHD_create_response_from_buffer(strlen(msg), (void *)msg, MHD_RESPMEM_PERSISTENT);
+  MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+  MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+  ret = MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR, response);
+  MHD_destroy_response(response);
+  return ret;
+}
+
+static enum MHD_Result handle_not_found(struct MHD_Connection *connection, struct MHD_Response *response, user_error_t code) {
+  enum MHD_Result ret;
+  const char *not_found = user_error_str(code);
+
+  response = MHD_create_response_from_buffer(
+      strlen(not_found), (void *)not_found, MHD_RESPMEM_PERSISTENT);
+  ret = MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, response);
+  MHD_destroy_response(response);
+  return ret;
+}
+
+/*
+ * Utilities
+ */
+// there might be some codes not used. grep pls.
+static const char *user_error_str(user_error_t code) {
+  char *str = "";
+  switch (code) {
+    case ERROR_INVALID_EMAIL:
+      str = "incorrect email";
+      break;
+    case ERROR_INVALID_PASSWORD:
+      str = "incorrect password";
+      break;
+    case ERROR_LOGIN_USER:
+      str = "error logging user in";
+      break;
+    case ERROR_REGISTER_USER:
+      str = "error registering user";
+      break;
+    case ERROR_UNKNOWN: // most likely sql related
+      str = "server related error";
+      break;
+    case SUCCESS:
+      str = "access granted";
+      break;
+    case NOT_FOUND:
+      str = "page not found";
+      break;
+    default:
+      str = "unknown error";
+  }
+  return str;
+}
+
 static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind,
-                                     const char *key, const char *filename,
-                                     const char *content_type,
-                                     const char *transfer_encoding,
-                                     const char *data, uint64_t off,
-                                     size_t size) {
+    const char *key, const char *filename,
+    const char *content_type,
+    const char *transfer_encoding,
+    const char *data, uint64_t off,
+    size_t size) {
   ConnInfo *user_info = cls;
 
   // put data received in user_info
@@ -95,13 +170,13 @@ static enum MHD_Result post_iterator(void *cls, enum MHD_ValueKind kind,
 
 static enum MHD_Result
 handle_request(void *cls, struct MHD_Connection *connection, const char *url,
-              const char *method, const char *version, const char *upload_data,
-              size_t *upload_data_size, void **con_cls) {
+    const char *method, const char *version, const char *upload_data,
+    size_t *upload_data_size, void **con_cls) {
   struct MHD_Response *response;
-  int ret;
+  // int ret;
 
   if (strcmp(method, "OPTIONS") == 0) {
-      return handle_options(connection, response);
+    return handle_options(connection, response);
   }
 
   ConnInfo *user_info;
@@ -119,7 +194,7 @@ handle_request(void *cls, struct MHD_Connection *connection, const char *url,
   if (strcmp(url, "/register") == 0 && strcmp(method, "POST") == 0) {
     if (user_info->pp == NULL) {
       user_info->pp = MHD_create_post_processor(connection, 1024,
-                                                &post_iterator, user_info);
+          &post_iterator, user_info);
       return MHD_YES;
     }
     if (*upload_data_size) {
@@ -129,108 +204,39 @@ handle_request(void *cls, struct MHD_Connection *connection, const char *url,
     } else {
       if (!user_info->first_name || !user_info->last_name ||
           !user_info->email || !user_info->password) {
-        // send response
-        const char *msg = "one or more of the user_info fields are empty";
-        response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
-                                                   MHD_RESPMEM_PERSISTENT);
-        MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-        MHD_add_response_header(response, "Access-Control-Allow-Methods",
-                                "POST, GET, OPTIONS");
-        MHD_add_response_header(response, "Access-Control-Allow-Headers",
-                                "Content-Type");
-        ret = MHD_queue_response(connection, MHD_HTTP_BAD_REQUEST, response);
-        MHD_destroy_response(response);
-        MHD_destroy_post_processor(user_info->pp);
-        destroy_conn_info(user_info);
-
-        return ret;
+        // i think some things need to be freed here... 
+        return handle_bad_request(connection, response, ERROR_REGISTER_USER);
       }
 
-      bool inserted_user = insert_user(db, user_info);
-      if (!inserted_user) {
-        const char *msg = "Failed to register user.";
-        response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
-                                                   MHD_RESPMEM_PERSISTENT);
-        MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-        MHD_add_response_header(response, "Access-Control-Allow-Methods",
-                                "POST, GET, OPTIONS");
-        MHD_add_response_header(response, "Access-Control-Allow-Headers",
-                                "Content-Type");
-        ret = MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR,
-                                 response);
-
-        MHD_destroy_response(response);
+      // change user_error_t to status_t
+      user_error_t inserted_user = insert_user(db, user_info);
+      if (inserted_user != SUCCESS) {
         MHD_destroy_post_processor(user_info->pp);
         destroy_conn_info(user_info);
-        return ret;
+        return handle_internal_server_error(connection, response, inserted_user);
       }
 
-      const char *msg = "User Registered.";
-      response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
-                                                 MHD_RESPMEM_PERSISTENT);
-
-      MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-      MHD_add_response_header(response, "Access-Control-Allow-Methods",
-                              "POST, GET, OPTIONS");
-      MHD_add_response_header(response, "Access-Control-Allow-Headers",
-                              "Content-Type");
-
-      ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-
-      MHD_destroy_response(response);
       MHD_destroy_post_processor(user_info->pp);
       destroy_conn_info(user_info);
 
-      return ret;
+      return handle_success(connection, response, inserted_user);
     }
-  } else if (strcmp(method, "POST") == 0 && strcmp(url, "/login")) {
-    char *checked_user = check_user(db, user_info);
-    if (!checked_user) {
-      const char *msg = "login failed.";
-      response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
-                                                 MHD_RESPMEM_PERSISTENT);
-      MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-      MHD_add_response_header(response, "Access-Control-Allow-Methods",
-                              "POST, GET, OPTIONS");
-      MHD_add_response_header(response, "Access-Control-Allow-Headers",
-                              "Content-Type");
-      ret = MHD_queue_response(connection, MHD_HTTP_INTERNAL_SERVER_ERROR,
-                               response);
-
-      MHD_destroy_response(response);
+  } else if (strcmp(method, "POST") == 0 && strcmp(url, "/login")) { // if instead of else if?
+    user_error_t login_user = check_user(db, user_info);
+    if (login_user != SUCCESS) {
       MHD_destroy_post_processor(user_info->pp);
       destroy_conn_info(user_info);
 
-      return ret;
+      return handle_internal_server_error(connection, response, login_user);
     }
 
-    const char *msg = "User Registered.";
-    response = MHD_create_response_from_buffer(strlen(msg), (void *)msg,
-                                               MHD_RESPMEM_PERSISTENT);
-
-    MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header(response, "Access-Control-Allow-Methods",
-                            "POST, GET, OPTIONS");
-    MHD_add_response_header(response, "Access-Control-Allow-Headers",
-                            "Content-Type");
-
-    ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-
-    MHD_destroy_response(response);
     MHD_destroy_post_processor(user_info->pp);
     destroy_conn_info(user_info);
-    
-    return ret;
+
+    return handle_success(connection, response, login_user);
   } else {
-    const char *not_found = "Not Found";
-    response = MHD_create_response_from_buffer(
-        strlen(not_found), (void *)not_found, MHD_RESPMEM_PERSISTENT);
-    ret = MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, response);
-
-    MHD_destroy_response(response);
     destroy_conn_info(user_info);
-
-    return ret;
+    return handle_not_found(connection, response, NOT_FOUND);
   }
   return MHD_NO;
 }
@@ -252,8 +258,8 @@ int MHD_background(int argc, char *const *argv) {
   /* initialize PRNG */
   srandom((unsigned int)time(NULL));
   d = MHD_start_daemon(MHD_USE_DEBUG, atoi(argv[1]), NULL, NULL, &handle_request,
-                       NULL, MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)15,
-                       MHD_OPTION_NOTIFY_COMPLETED, NULL, NULL, MHD_OPTION_END);
+      NULL, MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)15,
+      MHD_OPTION_NOTIFY_COMPLETED, NULL, NULL, MHD_OPTION_END);
   if (NULL == d)
     return 1;
   while (1) {
@@ -275,5 +281,3 @@ int MHD_background(int argc, char *const *argv) {
   MHD_stop_daemon(d);
   return 0;
 }
-
-
