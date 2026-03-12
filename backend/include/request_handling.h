@@ -6,6 +6,7 @@
 
 
 // struct for user register data + pp struct for post req
+// rename ConnInfo to []_t
 typedef struct 
 {
     struct MHD_PostProcessor *pp;
@@ -15,7 +16,18 @@ typedef struct
     char *password;
 } ConnInfo;
 
+typedef enum
+{
+    ERROR_INVALID_EMAIL,
+    ERROR_INVALID_PASSWORD,
+    ERROR_UNKNOWN,
+    SUCCESS,
+    ERROR_REGISTER_USER,
+    ERROR_LOGIN_USER,
+} user_error_t;
 
+
+const char *user_error_str(user_error_t code);
 int MHD_background(int argc, char *const *argv); 
 
 #endif
