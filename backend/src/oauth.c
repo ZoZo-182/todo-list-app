@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <curl/curl.h>
 #include <stdlib.h>
+#include <curl/curl.h>
 #include "../include/oauth.h"
 
 #define STR_SIZE 10000
